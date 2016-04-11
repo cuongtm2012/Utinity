@@ -1,12 +1,11 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Properties;
 
 import util.helpConfiguration;
 
@@ -25,39 +24,51 @@ public class GTMDP51 {
 	 */
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
+		Connection dbConnection = null;
+		Statement statement = null;
+		Properties prop = new Properties();
+		InputStream inputPath = null;
+		String line = "";
+		String cardNo = null;
+		long cardno = 0;
+		String configFile = "DBSHK.properties";
+		String fileName = "GTMDP51";
+		try {
+			inputPath = new FileInputStream(configFile);
+			prop.load(inputPath);
 
-		 try {
-	            String input = "C:\\Users\\e1067720\\Desktop\\HK_project\\4. Example\\text\\GTMDP51_151.TXT";
-	            FileInputStream fis = new FileInputStream(new File(input));
-	            BufferedReader br = new BufferedReader(new InputStreamReader(fis));
-	            String line;
-	            String cardNo = null;
-	            Integer cardno = 0;
-	            while ((line = br.readLine()) != null) {
-		                if(line.length() > 9){
-		                	cardNo = line.substring(0,9).trim();
-		                	
-		                	try{
-		                		cardno = Integer.valueOf(cardNo);
-		                	} catch(NumberFormatException ex){
-		                		cardno = -1;
-		                	}
-		                	
-		                }
-		                if (line != null && !line.isEmpty() && cardno >= 0) {
-		                    analysis(line);
-		                    
-		                }
-	            }
-	            
-	            br.close();
-	        } catch (IOException e) {
-	            e.printStackTrace();
-	        }
-		 System.out.println("Insert DB successfull");
+			FileInputStream fis = new FileInputStream(prop.getProperty(fileName));
+			BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+			
+			dbConnection = helpConfiguration.getDBConnection();
+			statement = dbConnection.createStatement();
+
+			while ((line = br.readLine()) != null) {
+				if (line.length() > 9) {
+					cardNo = line.substring(0, 16).trim();
+
+					try {
+						cardno = Long.parseLong(cardNo);
+						if (cardno >= 0) {
+							analysis(statement, line);
+
+						}
+					} catch (NumberFormatException ex) {
+						cardno = -1;
+					}
+
+				}
+
+			}
+
+			br.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		System.out.println("Insert DB successfull");
 	}
-	
-	public static void analysis(String line){
+
+	public static void analysis(Statement statement, String line) {
 		String cardNo = "";
 		String type = "";
 		String transaction = "";
@@ -66,45 +77,55 @@ public class GTMDP51 {
 		String statusChange = "";
 		String newStatus = "";
 		String octopus = "";
-		
-		try{
-			cardNo = line.substring(0, 18).trim();
-			type = line.substring(18, 21).trim();
+
+		String sqlInsert = "";
+		try {
+			cardNo = line.substring(0, 16).trim();
+			type = line.substring(16, 20).trim();
 			transaction = line.substring(21, 48).trim();
-			accountNum = line.substring(48, 72).trim();
-			remarks = line.substring(72, 120).trim();
-			octopus = line.substring(120,130).trim();
-			
-			insertDB(cardNo, type, transaction, accountNum, remarks, statusChange, newStatus, octopus);
-			
-		} catch(Exception ex){
-			System.out.println("Error CardNo"+cardNo+" - "+type+ transaction+ accountNum + remarks + octopus);
+			accountNum = line.substring(49, 72).trim();
+			remarks = line.substring(73, 98).trim();
+			octopus = line.substring(120, 130).trim();
+
+			sqlInsert = insertDB(cardNo, type, transaction, accountNum,
+					remarks, statusChange, newStatus, octopus);
+
+			statement.executeUpdate(sqlInsert);
+
+		} catch (Exception ex) {
+			System.out.println("Error CardNo" + cardNo + " - " + type
+					+ transaction + accountNum + remarks + octopus);
 			System.out.println(ex.getMessage());
 		}
-		
+
 	}
 
-	public static void insertDB(String cardNo, String type, String transaction, String accountNum, 
-			String remarks, String statusChange, String newStatus, String octopus){
-		Connection dbConnection = null;
-		Statement statement = null;
-		helpConfiguration help = new helpConfiguration();
+	public static String insertDB(String cardNo, String type,
+			String transaction, String accountNum, String remarks,
+			String statusChange, String newStatus, String octopus) {
 		statusChange = "";
 		newStatus = "";
-		
-		String sqlInsert = "Insert into GTMDP51 (CARDNO,TYPE,TRANSACTION,ACCOUNTNUMBER,REMARKS,STATUSCHANGE,NEWSTATUS,OCTOPUS) "
-				+ "values ('"+cardNo+"','"+type+"','"+transaction+"','"+accountNum+"','"+remarks+"','"+statusChange+"','"+newStatus+"','"+octopus+"')";
-		try{
-			dbConnection = help.getDBConnection();
-			statement = dbConnection.createStatement();
-			
+		String sqlInsert = "";
+		try {
+			sqlInsert = "Insert into GTMDP51 (CARDNO,TYPE,TRANSACTION,ACCOUNTNUMBER,REMARKS,STATUSCHANGE,NEWSTATUS,OCTOPUS) "
+					+ "values ('"
+					+ cardNo
+					+ "','"
+					+ type
+					+ "','"
+					+ transaction
+					+ "','"
+					+ accountNum
+					+ "','"
+					+ remarks
+					+ "','"
+					+ statusChange + "','" + newStatus + "','" + octopus + "')";
 			System.out.println(sqlInsert);
-			
-			statement.executeUpdate(sqlInsert);
-			
-		} catch(Exception ex){
+
+		} catch (Exception ex) {
 			System.out.println(ex.getMessage());
 		}
+		return sqlInsert;
 	}
-	
-	}
+
+}

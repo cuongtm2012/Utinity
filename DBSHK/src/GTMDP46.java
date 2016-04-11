@@ -2,11 +2,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Properties;
 
 import util.helpConfiguration;
 
@@ -25,52 +27,60 @@ public class GTMDP46 {
 	 */
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-
-		 try {
-	            String input = "C:\\Users\\e1067720\\Desktop\\HK_project\\4. Example\\text\\GTMDP46_146.TXT";
-	            FileInputStream fis = new FileInputStream(new File(input));
-	            BufferedReader br = new BufferedReader(new InputStreamReader(fis));
-	            String line;
-	            String accNo = null;
-	            long accNum = 0;
-	            while ((line = br.readLine()) != null) {
-		                if(line.length() > 9){
-		                	accNo = line.substring(20,26).trim();
-		                	
-		                	try{
-		                		accNum = Long.parseLong(accNo);
-		                	} catch(NumberFormatException ex){
-		                		accNum = -1;
-		                	}
-		                	
-		                }
-		                if (line != null && !line.isEmpty() && accNum >= 0) {
-		                    analysis(line);
-		                    
-		                }
-	            }
-	            
-	            br.close();
-	        } catch (IOException e) {
-	            e.printStackTrace();
-	        }
-		 System.out.println("Insert DB successfull");
-	}
-	
-	public static void analysis(String line){
-		String tranCode   =    "";
-		String type   =    "";
-		String cardVol   =    "";
-		String cardRate   =    "";
-		String cardAmt   =    "";
-		String origVol   =    "";
-		String origRate   =    "";
-		String origAmt   =    "";
-		String netDebit   =    "";
-		String amtDebit   =    "";
-		String jetcoCharge   =    "";
+		Connection dbConnection = null;
+		Statement statement = null;
+		Properties prop = new Properties();
+		InputStream inputPath = null;
+		String line = "";
+		String accNo = null;
+		long accNum = 0;
+		String configFile = "DBSHK.properties";
+		String fileName = "GTMDP46";
 		
-		try{
+		try {
+			inputPath = new FileInputStream(configFile);
+			prop.load(inputPath);
+
+			FileInputStream fis = new FileInputStream(prop.getProperty(fileName));
+			BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+			while ((line = br.readLine()) != null) {
+				if (line.length() > 9) {
+					accNo = line.substring(20, 26).trim();
+
+					try {
+						accNum = Long.parseLong(accNo);
+					} catch (NumberFormatException ex) {
+						accNum = -1;
+					}
+
+				}
+				if (line != null && !line.isEmpty() && accNum >= 0) {
+					analysis(line);
+
+				}
+			}
+
+			br.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.out.println("Insert DB successfull");
+	}
+
+	public static void analysis(String line) {
+		String tranCode = "";
+		String type = "";
+		String cardVol = "";
+		String cardRate = "";
+		String cardAmt = "";
+		String origVol = "";
+		String origRate = "";
+		String origAmt = "";
+		String netDebit = "";
+		String amtDebit = "";
+		String jetcoCharge = "";
+
+		try {
 			tranCode = line.substring(2, 12).trim();
 			type = line.substring(2, 12).trim();
 			cardVol = line.substring(2, 12).trim();
@@ -83,36 +93,57 @@ public class GTMDP46 {
 			amtDebit = line.substring(2, 12).trim();
 			jetcoCharge = line.substring(2, 12).trim();
 
-			insertDB(tranCode, type, cardVol, cardRate, cardAmt, origVol, origRate, origAmt, netDebit, amtDebit, jetcoCharge);
+			insertDB(tranCode, type, cardVol, cardRate, cardAmt, origVol,
+					origRate, origAmt, netDebit, amtDebit, jetcoCharge);
 
-	
-		} catch(Exception ex){
-			System.out.println("Error cardNumber : "+tranCode);
+		} catch (Exception ex) {
+			System.out.println("Error cardNumber : " + tranCode);
 			System.out.println(ex.getMessage());
 		}
-		
+
 	}
 
-	public static void insertDB(String tranCode, 	String type, 	String cardVol, 	String cardRate, 	String cardAmt, 	String origVol, 	
-			String origRate, 	String origAmt, 	String netDebit, 	String amtDebit, 	String jetcoCharge)
-	{
+	public static void insertDB(String tranCode, String type, String cardVol,
+			String cardRate, String cardAmt, String origVol, String origRate,
+			String origAmt, String netDebit, String amtDebit, String jetcoCharge) {
 		Connection dbConnection = null;
 		Statement statement = null;
 		helpConfiguration help = new helpConfiguration();
-		
+
 		String sqlInsert = "Insert into GTMDP46(TRANCODE,	TRANTYPE,	CHVOL,	CHRATE,	CHAMOUNT,	OVOL,	ORATE,	OAMOUNT,	NETDEBIT,	BILLCREDIT,	JETCOCHARE) "
-				+ "values ('"+tranCode+"','"+type+"','"+cardVol+"','"+cardRate+"','"+cardAmt+"','"+origVol+"','"+origRate+"','"+origAmt+"','"+netDebit+"','"+amtDebit+"','"+jetcoCharge+"')";
-		try{
+				+ "values ('"
+				+ tranCode
+				+ "','"
+				+ type
+				+ "','"
+				+ cardVol
+				+ "','"
+				+ cardRate
+				+ "','"
+				+ cardAmt
+				+ "','"
+				+ origVol
+				+ "','"
+				+ origRate
+				+ "','"
+				+ origAmt
+				+ "','"
+				+ netDebit
+				+ "','"
+				+ amtDebit
+				+ "','"
+				+ jetcoCharge + "')";
+		try {
 			dbConnection = help.getDBConnection();
 			statement = dbConnection.createStatement();
-			
+
 			System.out.println(sqlInsert);
-			
+
 			statement.executeUpdate(sqlInsert);
-			
-		} catch(Exception ex){
+
+		} catch (Exception ex) {
 			System.out.println(ex.getMessage());
 		}
 	}
-	
-	}
+
+}

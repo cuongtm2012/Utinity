@@ -1,12 +1,11 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Properties;
 
 import util.helpConfiguration;
 
@@ -25,40 +24,51 @@ public class GTMDP69 {
 	 */
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
+		Connection dbConnection = null;
+		Statement statement = null;
+		Properties prop = new Properties();
+		InputStream inputPath = null;
+		String line = "";
+		String cardNo = null;
+		long cardno = 0;
+		String configFile = "DBSHK.properties";
+		String fileName = "GTMDP69";
+		
+		try {
+			inputPath = new FileInputStream(configFile);
+			prop.load(inputPath);
 
-		 try {
-	            String input = "C:\\Users\\e1067720\\Desktop\\HK_project\\4. Example\\text\\GTMDP69.TXT";
-	            //String input = "C:\\Users\\e1067720\\Desktop\\HK_project\\4. Example\\text\\GTMDP69_001.TXT";
-	            FileInputStream fis = new FileInputStream(new File(input));
-	            BufferedReader br = new BufferedReader(new InputStreamReader(fis));
-	            String line;
-	            String cardNo = null;
-	            Integer cardno = 0;
-	            while ((line = br.readLine()) != null) {
-		                if(line.length() > 9){
-		                	cardNo = line.substring(0,9).trim();
-		                	
-		                	try{
-		                		cardno = Integer.valueOf(cardNo);
-		                	} catch(NumberFormatException ex){
-		                		cardno = -1;
-		                	}
-		                	
-		                }
-		                if (line != null && !line.isEmpty() && cardno >= 0) {
-		                    analysis(line);
-		                    
-		                }
-	            }
-	            
-	            br.close();
-	        } catch (IOException e) {
-	            e.printStackTrace();
-	        }
-		 System.out.println("Insert DB successfull");
+			FileInputStream fis = new FileInputStream(prop.getProperty(fileName));
+			BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+			
+			dbConnection = helpConfiguration.getDBConnection();
+			statement = dbConnection.createStatement();
+
+			while ((line = br.readLine()) != null) {
+				if (line.length() > 9) {
+					cardNo = line.substring(0, 7).trim();
+
+					try {
+						cardno = Integer.valueOf(cardNo);
+						if (cardno >= 0) {
+							analysis(statement, line);
+						}
+					} catch (NumberFormatException ex) {
+						cardno = -1;
+					}
+
+				}
+
+			}
+
+			br.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		System.out.println("Insert DB successfull");
 	}
-	
-	public static void analysis(String line){
+
+	public static void analysis(Statement statement, String line) {
 		String bin = "";
 		String cardNo = "";
 		String media = "";
@@ -67,45 +77,56 @@ public class GTMDP69 {
 		String tin = "";
 		String template = "";
 		String exception = "";
-		
-		try{
-			bin = line.substring(0, 9).trim();
-			cardNo = line.substring(13, 32).trim();
-			media = line.substring(34, 58).trim();
-			seq = line.substring(60, 64).trim();
-			documentNumber = line.substring(67, 73).trim();
-			tin = line.substring(76,96).trim();
-			template = line.substring(98,114).trim();
-			exception = line.substring(98,114).trim();
-			
-			insertDB(bin, cardNo, media, seq, documentNumber, tin, template, exception);
-			
-		} catch(Exception ex){
-			System.out.println("Error CardNo : "+bin+" - "+cardNo+ media + seq + documentNumber+ tin + template+ exception);
+
+		String sqlInsert = "";
+		try {
+			bin = line.substring(0, 7).trim();
+			cardNo = line.substring(8, 20).trim();
+			media = line.substring(21, 26).trim();
+			seq = line.substring(27, 30).trim();
+			documentNumber = line.substring(31, 51).trim();
+			tin = line.substring(52, 61).trim();
+			template = line.substring(63, line.length()).trim();
+			// exception = line.substring(100,line.length()).trim();
+
+			sqlInsert = insertDB(bin, cardNo, media, seq, documentNumber, tin,
+					template, exception);
+
+			statement.executeUpdate(sqlInsert);
+		} catch (Exception ex) {
+			System.out.println("Error CardNo : " + bin + " - " + cardNo + media
+					+ seq + documentNumber + tin + template + exception);
 			System.out.println(ex.getMessage());
 		}
-		
+
 	}
 
-	public static void insertDB(String bin, String cardNo, String media, String seq, 
-			String documentNumber, String tin, String template, String exception){
-		Connection dbConnection = null;
-		Statement statement = null;
-		helpConfiguration help = new helpConfiguration();
-		
-		String sqlInsert = "Insert into GTMDP69(BIN,CARDNO,MEDIA,SEQ,DOCUMENTNUMBER,TIN,TEMPLATE,EXCEPTION) "
-				+ "values ('"+bin+"','"+cardNo+"','"+media+"','"+seq+"','"+documentNumber+"','"+tin+"','"+template+"','"+exception+"')";
-		try{
-			dbConnection = help.getDBConnection();
-			statement = dbConnection.createStatement();
-			
+	public static String insertDB(String bin, String cardNo, String media,
+			String seq, String documentNumber, String tin, String template,
+			String exception) {
+		String sqlInsert = "";
+
+		try {
+			sqlInsert = "Insert into GTMDP69(BIN,CARDNO,MEDIA,SEQ,DOCUMENTNUMBER,TIN,TEMPLATE,EXCEPTION) "
+					+ "values ('"
+					+ bin
+					+ "','"
+					+ cardNo
+					+ "','"
+					+ media
+					+ "','"
+					+ seq
+					+ "','"
+					+ documentNumber
+					+ "','"
+					+ tin
+					+ "','" + template + "','" + exception + "')";
+
 			System.out.println(sqlInsert);
-			
-			statement.executeUpdate(sqlInsert);
-			
-		} catch(Exception ex){
+		} catch (Exception ex) {
 			System.out.println(ex.getMessage());
 		}
+		return sqlInsert;
 	}
-	
-	}
+
+}
