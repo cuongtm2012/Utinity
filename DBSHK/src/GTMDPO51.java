@@ -72,41 +72,57 @@ public class GTMDPO51 {
 	}
 
 	public static void analysis(Statement statement, String line) {
-		String actind = "";
-		String octopus = "";
-		String debtorRef = "";
-		String octopus = "";
-		String tranCode = "";
-		String tranSeq = "";
-		String tranAmount = "";
-		String respCodeDesc = "";
-
+		String actInd   =    "";
+		String octopus   =    "";
+		String debCode   =    "";
+		String debType   =    "";
+		String debAcc   =    "";
+		String debName   =    "";
+		String debRef   =    "";
+		String debDocTYNO   =    "";
+		String DOB   =    "";
+		String genderACC   =    "";
+		String crCode   =    "";
+		String crAcc   =    "";
+		String crName   =    "";
+		String crDocTYNO   =    "";
+		String topupVal   =    "";
+		String homePhone   =    "";
+		String mobiPhone   =    "";
+		String lang   =    "";
+		
 		String sqlInsert = "";
 		try {
-			debtorAccountNo = line.substring(0, 9).trim();
-			applicantName = line.substring(13, 32).trim();
-			debtorRef = line.substring(34, 58).trim();
-			octopus = line.substring(60, 64).trim();
-			tranCode = line.substring(67, 73).trim();
-			tranSeq = line.substring(76, 96).trim();
-			tranAmount = line.substring(98, 114).trim();
-			respCodeDesc = line.substring(98, 114).trim();
+			actInd = line.substring(2, 12).trim();
+			octopus = line.substring(2, 12).trim();
+			debCode = line.substring(2, 12).trim();
+			debType = line.substring(2, 12).trim();
+			debAcc = line.substring(2, 12).trim();
+			debName = line.substring(2, 12).trim();
+			debRef = line.substring(2, 12).trim();
+			debDocTYNO = line.substring(2, 12).trim();
+			DOB = line.substring(2, 12).trim();
+			genderACC = line.substring(2, 12).trim();
+			crCode = line.substring(2, 12).trim();
+			crAcc = line.substring(2, 12).trim();
+			crName = line.substring(2, 12).trim();
+			crDocTYNO = line.substring(2, 12).trim();
+			topupVal = line.substring(2, 12).trim();
+			homePhone = line.substring(2, 12).trim();
+			mobiPhone = line.substring(2, 12).trim();
+			lang = line.substring(2, 12).trim();
 
-			sqlInsert = insertDB(debtorAccountNo, applicantName, debtorRef, octopus,
-					tranCode, tranSeq, tranAmount, respCodeDesc);
+			insertDB(actInd, octopus, debCode, debType, debAcc, debName, crCode, crAcc, crName, crDocTYNO, topupVal, homePhone, mobiPhone);
 			statement.executeUpdate(sqlInsert);
 		} catch (Exception ex) {
-			System.out.println("Error CardNo : " + debtorAccountNo + " - "
-					+ applicantName + debtorRef + octopus + tranCode + tranSeq
-					+ respCodeDesc);
-			System.out.println(ex.getMessage());
+			ex.printStackTrace();
 		}
 
 	}
 
-	public static String insertDB(String debtorAccountNo, String applicantName,
-			String debtorRef, String octopus, String tranCode, String tranSeq,
-			String tranAmount, String respCodeDesc) {
+	public static String insertDB(String actInd, 	String octopus, 	String debCode, 	String debType, 	String debAcc, 	String debName, 	
+			String debRef, 	String debDocTYNO, 	String DOB, 	String genderACC, 	String crCode, 	String crAcc, 	String crName, 	
+			String crDocTYNO, 	String topupVal, 	String homePhone, 	String mobiPhone, 	String lang) {
 		String sqlInsert = "";
 		try {
 			sqlInsert = "Insert into GTMDP17(DEBTORACCOUNTNO,APPLICANTNAME,DEBTORREF,OCTOPUS,TRANCODE,TRANSEQ,TRANAMOUNT,RESPCODEDESC) "

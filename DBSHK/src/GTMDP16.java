@@ -124,7 +124,7 @@ public class GTMDP16 {
 			statement.executeUpdate(sqlInsert);
 
 		} catch (Exception ex) {
-			System.out.println(ex.getMessage());
+			ex.printStackTrace();
 		}
 	}
 }
